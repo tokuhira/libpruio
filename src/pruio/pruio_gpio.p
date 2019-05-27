@@ -56,14 +56,14 @@ GpioDone:
 //
 // write configuration from data block to subsystem registers
 //
-  LDI  Cntr, 0            // reset counter
+  LDI  GpoC, 0            // reset counter
 GpioLoop:
   LBBO DeAd, Para, 0, 4*4 // load subsystem parameters DeAd, ClAd, ClVa, REVISION
   ADD  Para, Para, 4*4    // increase pointer
 
 // prepare data array
 //
-  LSL  U1, Cntr, 4          // calc array pointer (sizeof(GpioArr)=16)
+  LSL  U1, GpoC, 4          // calc array pointer (sizeof(GpioArr)=16)
   SET  U2, DeAd, 8          // copy DeAd (high bank)
   QBEQ GpioJump, ClVa, 2    // if subsystem enabled -> don't clear DeAd
   LDI  U2, 0                // clear DeAd
@@ -74,8 +74,8 @@ GpioJump:
 // check enabled / dissabled and data block length
 //
   QBEQ GpioDone, ClAd, 0    // if subsystem disabled -> don't touch
-  QBEQ GpioCopy, ClVa, 2    // if normal operation -> copy
-  SBBO ClVa, ClAd, 0, 1     // write clock register
+  QBNE GpioCopy, DeAd, 0    // if normal operation -> copy
+  SBBO ClVa, ClAd, 0, 4     // write clock register
   QBEQ GpioDone, UR, 0      // if empty set -> skip
   ADD  Para, Para, 4*26-4   // increase pointer
   JMP  GpioDone
@@ -101,8 +101,8 @@ GpioCopy:
   ADD  Para, Para, 4*26       // increase pointer
 
 GpioDone:
-  ADD  Cntr, Cntr, 1      // increase counter
-  QBGE GpioLoop, Cntr, PRUIO_AZ_GPIO // if not last -> do next
+  ADD  GpoC, GpoC, 1      // increase counter
+  QBGE GpioLoop, GpoC, PRUIO_AZ_GPIO // if not last -> do next
 .endm
 
 
@@ -131,9 +131,9 @@ GpioDEnd:
 //
   QBLT GpioCEnd, Comm.b3, PRUIO_COM_GPIO_CONF // if no GPIO_IN command -> skip
   QBLT IoCEnd, Comm.b3, PRUIO_COM_GPIO_CONF // if no GPIO command -> skip, invalid
-  LBCO U2, DRam, 4*2, 4*4  // get parameters
+  LBCO U2, DRam, 2*4, 4*4  // get parameters
   SBBO U5, U2, 0x34, 4     // write OE
-  SBBO U3, U2, 0x90, 4*2   // write CLEARDATAOUT & SETDATAOUT
+  SBBO U3, U2, 0x90, 2*4   // write CLEARDATAOUT & SETDATAOUT
   JMP  IoCEnd              // finish command
 
 GpioCEnd:
@@ -152,7 +152,7 @@ GpioCEnd:
   QBEQ TrgPost, UR, 0      // if subsystem disabled -> skip
 
 TrgGet:
-  LBBO U1, UR, 0x38, 4*2   // load GPIO states (input / output)
+  LBBO U1, UR, 0x38, 2*4   // load GPIO states (input / output)
   OR   U3, U1, U2          // mix both together
 
   QBBS TrgLow, TrgR.t7     // check negative bit

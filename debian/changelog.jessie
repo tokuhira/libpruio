@@ -1,3 +1,42 @@
+libpruio (0.6.6) jessie; urgency=low
+
+  * new: second parameter in function prussdrv_pru_enable() = start at
+  * new: function prussdrv_pru_resume() for restart after SLP 1 or HALT
+  * new: TIMER one shot mode with counter
+  * fix: examples pruss_[add|toggle], resume function implemented
+  * fix: function prussdrv_exIt(), optimized cleanup
+  * fix: PRU systems config: copies regs for disabled subsystems now
+  * fix: PRU code, reg PWMSS.TZCTL config
+  * fix: evaluation in Pwm/Tim->Value functions fixed
+  * fix: TIMERSS generated timers, start peak removed, one shot optimized
+  * fix: file pruio.py, macro PruReady removed
+  * fix: file rb_file.py, correct pointer p1 computation
+  * fix: gen. invalid pointer AdcUdt::Value in case of config error
+
+ -- Thomas Freiherr <Thomas.Freiherr@gmx.net>  Thu, 09 May 2019 13:57:29 +0200
+
+libpruio (0.6.4c) jessie; urgency=low
+
+  * fix: finetuning CAP input (freq&duty)
+  * fix: finetuning PWM output (freq&duty)
+  * fix: pinmux in setPin_lkm_bb for double pins
+  * fix: docs for TIMER and PWM
+  * fix: Timer scaling fixed [s] -> [ms]
+  * fix: PwmUdt::Sync LKM value 0x08 -> 0xFF
+  * cha: Timer PRU code starting by trigger
+  * cha: LKM tblck value 0x80 -> 0xFF
+  * fix: LKM case syntax (commas)
+  * cha: in GpioUdt renamed setGpio -> setGpioSs to be more clear
+
+ -- Thomas Freiherr <Thomas.Freiherr@gmx.net>  Fri, 19 Apr 2019 20:39:14 +0200
+
+libpruio (0.6.4b) jessie; urgency=low
+
+  * fix: DTOR does proper re-muxing again
+  * fix: race condition in fast setValue sequences
+
+ -- Thomas Freiherr <Thomas.Freiherr@gmx.net>  Wed, 27 Mar 2019 11:35:02 +0100
+
 libpruio (0.6.4a) jessie; urgency=low
 
   * fix: BallInit/BallConf handling with LKM

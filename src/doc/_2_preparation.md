@@ -24,7 +24,7 @@ Debian operating system, edit the file `sudo nano
     deb http://beagle.tuks.nl/debian jessie/
     deb-src http://beagle.tuks.nl/debian jessie/
 
-Then grep the keyring by (mind the '-' character at the ende)
+Then grep the keyring by (mind the '-' character at the end)
 
     wget -qO - http://beagle.tuks.nl/debian/pubring.gpg | sudo apt-key add -
 
@@ -35,19 +35,20 @@ Once prepared, you can update your package manager database
 and finally download and install the packages for your prefered
 programming language:
 
-|   Size | Name                         | Description                 |
-| -----: | :--------------------------- | :-------------------------- |
-|  45 kB | libpruio_0.6.0_armhf.deb     | shared library binary       |
-|  18 kB | libpruio-dev_0.6.0_armhf.deb | examples/bindings C         |
-|  27 kB | libpruio-bas_0.6.0_armhf.deb | examples/bindings FreeBASIC |
-|  18 kB | python-pruio_0.6.0_armhf.deb | examples/bindings Python    |
-|  80 kB | libpruio-bin_0.6.0_armhf.deb | executable examples         |
-|   8 kB | libpruio-lkm_0.6.0_armhf.deb | loadable kernel module      |
-| 4.1 MB | libpruio-doc_0.6.0_all.deb   | documentation (html-tree)   |
-| 1.2 MB | libpruio_0.6.0.tar.xz        | source code                 |
+| Name         | Description                 |   Size | Current File Name            |
+| :----------- | :-------------------------- | -----: | :--------------------------- |
+| libpruio     | shared library binary       |  45 kB | libpruio_0.6.0_armhf.deb     |
+| libpruio-dev | examples/bindings C         |  18 kB | libpruio-dev_0.6.0_armhf.deb |
+| libpruio-bas | examples/bindings FreeBASIC |  27 kB | libpruio-bas_0.6.0_armhf.deb |
+| python-pruio | examples/bindings Python    |  18 kB | python-pruio_0.6.0_armhf.deb |
+| libpruio-bin | executable examples         |  80 kB | libpruio-bin_0.6.0_armhf.deb |
+| libpruio-lkm | loadable kernel module      |   8 kB | libpruio-lkm_0.6.0_armhf.deb |
+| libpruio-doc | documentation (html-tree)   | 4.1 MB | libpruio-doc_0.6.0_all.deb   |
+| libpruio-src | source code                 | 1.2 MB | libpruio_0.6.0.tar.xz        |
 
-\note The size may vary after updates. It's mentioned to give you a
-      roughly assessment of the download volume.
+\note The size and the current full name may vary after updates.
+      They're mentioned to give you a roughly assessment of the
+      download volume.
 
 The first package contains the binary executable of the shared library,
 which gets linked at runtime to related programs. This one is mandatory
@@ -80,9 +81,12 @@ module on each kernel change/update, to keep the binary up-to-date.
 Find further information on the LKM in section \ref sSecLKM.
 
 The -doc package contains the documentation in html format. That is the
-text you're currently reading. You can install it for off-line reading,
-but it's also [available
-on-line.](http://users.freebasic-portal.de/tjf/Projekte/@PROJ_NAME@/doc/html/index.html)
+text you're currently reading. Installing that package copies a HTML
+tree on to your box starting at
+http://usr/share/doc/libpruio-doc/html/index.html for off-line reading.
+Load and bookmark that file in your prefered browser. But it's also
+[available
+on-line.](http://users.freebasic-portal.de/tjf/Projekte/libpruio/doc/html/index.html)
 It's recommended to use the off-line version, because it's garantied to
 match the binaries. The on-line version may be behind or even before
 the current binaries. When you're short of memory at the Beaglebone,
@@ -91,6 +95,9 @@ you can install the documentation on the PC as well.
 And finally the .tar.xz package contains the source code, which was
 used to build the above described packages. Unlike the code on \Webs
 this code is garantied to match the contens of the other packages.
+
+\note In order to use libpruio pinmuxing disable the device tree
+      overlay for config-pin (see section \ref sSecLKM).
 
 
 ## C programming language ## {#sSecDev}
@@ -113,7 +120,7 @@ and you're ready to start.
 
 For development in FreeBASIC programming language execute
 
-    sudo apt-get install libpruio-bas libpruio-lkm libpruio-doc
+    sudo apt-get install libpruio-dev libpruio-bas libpruio-lkm libpruio-doc
 
 to install the shared library, the header files, the example source
 code, the loadable kernel module and the html documentation
@@ -129,7 +136,7 @@ and you're ready to start.
 
 For development in Python programming language execute
 
-    sudo apt-get install python-pruio libpruio-klm libpruio-doc
+    sudo apt-get install python-pruio libpruio-lkm libpruio-doc
 
 to install the shared library, the header files, the example source
 code, the loadable kernel module and the html documentation

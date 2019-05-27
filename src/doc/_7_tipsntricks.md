@@ -116,31 +116,62 @@ access some GPIOs are connected directly to the PRU registers R30
 (output) and R31 (input). They operate fast with low latency (one
 cycle).
 
-On Beaglebone boards (2x46 headers) all fast GPIOs can get used on
-PRU-0 with a custom firmware when the SD card slot is free (that's why
-\Proj runs on PRU-1 by default). Therefor you have to operate from the
-on-board memory (EMC) and use a special connector to wire some SD slot
-pins. Here's a table of the fast GPIO pins for PRU-0:
+On Beaglebone boards (2x46 headers) custom firmware can use all fast
+GPIOs on both PRUSS, when both, the JT header and the SD card slot, are
+free. Therefor you have to operate from the on-board memory (EMC) and
+use a special connector to wire some SD slot pins. Here's a table of
+the fast GPIO pins for both PRUSS:
 
-| Bit# | Output | Input |
-| :--: | :----: | :---: |
-|   0  |  P9_31 | P9_31 |
-|   1  |  P9_29 | P9_29 |
-|   2  |  P9_30 | P9_30 |
-|   3  |  P9_28 | P9_28 |
-|   4  |  BA104 | BA104 |
-|   5  |  P9_27 | P9_27 |
-|   6  |  BA106 | BA106 |
-|   7  |  P9_25 | P9_25 |
-|   8  |  SD_02 | SD_02 |
-|   9  |  SD_01 | SD_01 |
-|  10  |  SD_08 | SD_08 |
-|  11  |  SD_07 | SD_07 |
-|  12  |  SD_05 | SD_05 |
-|  13  |  SD_03 | SD_03 |
-|  14  |  P8_12 | P8_16 |
-|  15  |  P8_11 | P8_15 |
-|  16  |        | P9_24 |
+| Bit# | Out-0 (R30) | In-0 (R31) | Out-1 (R30) | In-1 (R31) |
+| :--: | :---: | :---: | :---: | :---: |
+|   0  | P9_31 | P9_31 | P8_45 | P8_45 |
+|   1  | P9_29 | P9_29 | P8_46 | P8_46 |
+|   2  | P9_30 | P9_30 | P8_43 | P8_43 |
+|   3  | P9_28 | P9_28 | P8_44 | P8_44 |
+|   4  | BA104 | BA104 | P8_41 | P8_41 |
+|   5  | P9_27 | P9_27 | P8_42 | P8_42 |
+|   6  | BA106 | BA106 | P8_39 | P8_39 |
+|   7  | P9_25 | P9_25 | P8_40 | P8_40 |
+|   8  | SD_02 | SD_02 | P8_27 | P8_27 |
+|   9  | SD_01 | SD_01 | P8_29 | P8_29 |
+|  10  | SD_08 | SD_08 | P8_28 | P8_28 |
+|  11  | SD_07 | SD_07 | P8_30 | P8_30 |
+|  12  | SD_05 | SD_05 | P8_21 | P8_21 |
+|  13  | SD_03 | SD_03 | P8_20 | P8_20 |
+|  14  | P8_12 | P8_16 |       | JT_04 |
+|  15  | P8_11 | P8_15 | JT_05 |       |
+|  16  |       | P9_24 |       | P9_26 |
 
 \note The `BAxxx` entries are the ball numbers of the double pins on
-      header connectors P9_41 and P9_42.
+      header connectors P9_41 and P9_42. The JT pins are unidirectional.
+
+
+# Auto Starting an Application # {#SecAutoStart}
+
+In order to auto start a program compiled against \Proj (ie. by a
+systemd service), you've to care about some kind of race conditions.
+Before the CTOR call PruIo::PruIo() your code needs the kernel driver
+`uio_pruss` loaded in any case, and perhaps it also needs the LKM for
+pinmuxing. You've to make sure that both drivers are properly loaded
+before your code starts.
+
+To find out the loading status you can check if some sysfs files exists
+
+\Item{uio_pruss} check for `/dev/uio5`
+
+\Item{LKM} check for `/sys/devices/platform/libpruio/state`
+
+This can either get done by a loop halting your code until the files
+are created. Or you can use a bash script to wait for the files being
+up, like
+
+    until test -e /dev/uio5; do sleep 1; done
+    until test -e /sys/devices/platform/libpruio/state; do sleep 1; done
+
+\note When your code starts before the `uio_pruss` driver is loaded,
+      the CTOR call creates the file `/dev/uio5`, and that file is
+      blocking proper loading of the driver. You can check this race
+      condition ie. by using the output of command `ls -l /dev/uio*`.
+      When the file is mistakenly created by the CTOR, the file `uio5`
+      is different. Ie. since kernel 4.14 the owner is `root root`,
+      while the proper files are owned by `root users`.

@@ -4,14 +4,15 @@ Memory Organisation  {#ChaMemory}
 
 \Proj uses three blocks of memory to organize its data
 
-- PruIo::DInit : A memory block of variable size, allocated by
-  \Proj, containing the data arrays PruIo::Init and PruIo::Conf.
+- PruIo::DInit : A memory block of variable size in user space memory,
+  allocated by \Proj, containing the data arrays PruIo::Init and
+  PruIo::Conf.
 
-- PruIo::DRam : A memory block of 2 x 8 kB, allocated by the kernel
-  driver uio_pruss and mapped to the PRUSS DRam.
+- PruIo::DRam : A memory block of 2 x 8 kB on the PRUSS, mapped by the
+  kernel driver uio_pruss for ARM access.
 
-- PruIo::ERam : A memory block of variable size (up to 8 MB), allocated
-  by the kernel driver uio_pruss.
+- PruIo::ERam : A contingous memory block of variable size (up to 8 MB)
+  in kernel space memory, allocated by the kernel driver uio_pruss.
 
 These blocks are available after the constructor call PruIo::PruIo()
 and get destroyed in the destructor PruIo::~PruIo(). The constructor
@@ -197,25 +198,27 @@ The function PruIo::config() uploads the customized configuration to
 the subsystems and starts operation in the declared run mode. Before
 the pasm_run.p instructions get executed, the DRam area contains
 
-|    Value  | Description                       |
-| --------: | : ------------------------------- |
-|   DRam[1] | Start of the data block           |
-|   DRam[2] | Number of samples AdcUdt::Samples |
-|   DRam[3] | Step mask AdcSet::STEPENABLE      |
-|   DRam[4] | Bit encoding mode AdcUdt::LslMode |
-|   DRam[5] | Timer value AdcUdt::TimerVal      |
-| DRam[128] | Conf data block context           |
+|     Value  | Description                       |
+| ---------: | : ------------------------------- |
+|    DRam[1] | Start of the data block           |
+|    DRam[2] | Number of samples AdcUdt::Samples |
+|    DRam[3] | Step mask AdcSet::STEPENABLE      |
+|    DRam[4] | Bit encoding mode AdcUdt::LslMode |
+|    DRam[5] | Timer value AdcUdt::TimerVal      |
+| DRam[128-] | Conf data block context           |
 
 The PRU software reads these parameters and writes the configuration to
 the subsystem registers. Then it prepares the DRam area as follows
 
-|  Value   | Description             |
-| -------: | : --------------------- |
-|  DRam[0] | PRUIO_MSG_xxx           |
-| DRam[16] | 4xGpioArr (4*16 bytes)  |
-| DRam[64] | 3xPwmssArr (3*32 bytes) |
-| DRam[72] | ADC data (38 bytes)     |
-| DRam[89] | 4xTimerArr (4*16 bytes) |
+|    Value   | Description                        |
+|   -------: | : -------------------------------- |
+|    DRam[0] | PRUIO_MSG_xxx                      |
+| DRam[1-15] | var. parameters                    |
+|   DRam[16] | 4 x GpioArr (4*16 bytes)           |
+|   DRam[64] | 3 x PwmssArr (3*32 bytes)          |
+|   DRam[72] | AdcSet::DeAd (4 bytes)             |
+|   DRam[73] | 17 x AdcUdt::Value data (34 bytes) |
+|   DRam[89] | 4 x TimerArr (4*16 bytes)          |
 
 The type of PRUIO_MSG_xxx depends on the required run mode. It's either
 \ref PRUIO_MSG_IO_OK in case of IO mode (parameter *Samp* = 1) or \ref
@@ -361,15 +364,14 @@ It's allocated by the kernel driver when loaded. The default size is
 256 kB (= 128 kSamples). \Proj uses the external memory in RB and MM
 mode to store the ADC samples.
 
-- In RB mode the size of the ring buffer is limited by the size of the
-  external ram.
-
-- And in MM mode the number of total samples (`= AdcUdt::Samples x
-  AdcUdt::ChAz`) must not be greater than the available number of
-  samples in the external memory.
+In both cases the number of total samples (`= AdcUdt::Samples x
+AdcUdt::ChAz`) must not be greater than the available number of samples
+in the external memory. The block size is available in member variable
+PruIo::ESize. The pointer AdcUdt::Samples gets set to the start of
+the ERam block.
 
 The kernel driver allows to customize the size of the external memory.
-This must be done at the first driver loading. Ie. execute (with admin
+This must be done at driver loading time. Ie. execute (with admin
 privileges) `modprobe uio_pruss extram_pool_sz=0x800000` to set the
 maximum size of 8 MB (= 0x800000).
 
